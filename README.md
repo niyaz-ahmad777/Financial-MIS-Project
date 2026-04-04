@@ -30,3 +30,15 @@ This project provides a simple Financial MIS dashboard with:
 - SQLite database is auto-created at backend/financial_mis.db on first run.
 - Tables are initialized from database/schema.sql with seed demo data.
 - Protected API routes require a Bearer token from /api/auth/login.
+
+## Team Collaboration (GitHub)
+1. Add collaborators from GitHub:
+   - Open repository -> Settings -> Collaborators and teams
+   - Click Add people, then invite by GitHub username or email
+2. Teammate workflow:
+   - Clone repo: `git clone https://github.com/niyaz-ahmad777/Financial-MIS-Project.git`
+   - Create branch: `git checkout -b feature/task-name`
+   - Commit and push: `git add . && git commit -m "msg" && git push -u origin feature/task-name`
+   - Create Pull Request into `main`
+
+See CONTRIBUTING.md for full onboarding instructions.
