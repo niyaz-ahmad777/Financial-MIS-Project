@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+.env
+financial-mis-project/.venv/
+financial-mis-project/**/__pycache__/
+financial-mis-project/**/*.pyc
+financial-mis-project/**/*.pyo
+financial-mis-project/**/*.db
+financial-mis-project/**/*.sqlite3
+financial-mis-project/ml_model/model.pkl

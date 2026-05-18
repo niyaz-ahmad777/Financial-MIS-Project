@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial MIS - Login</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="auth-container">
+    <section class="card auth-card">
+      <h1>Financial MIS Login</h1>
+      <p class="auth-subtitle">AI Fraud Detection and Cybersecurity Alert System</p>
+      <button class="back-btn" type="button" data-back-href="landing.html" style="margin-top: 0.6rem; margin-bottom: 0.4rem;">
+        <i class="bi bi-arrow-left"></i> Back
+      </button>
+
+      <form id="loginForm">
+        <label for="username">Email</label>
+        <input id="username" type="email" placeholder="admin@company.com" required />
+
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="Enter your password" required />
+
+        <button type="submit">Login</button>
+        <p id="message" class="message"></p>
+      </form>
+
+      <hr style="border: 0; border-top: 1px solid #d7e3f3; margin: 1rem 0;" />
+
+      <form id="registerForm">
+        <label for="registerEmail">Register Email</label>
+        <input id="registerEmail" type="email" placeholder="you@example.com" required />
+
+        <label for="registerPassword">Password</label>
+        <input id="registerPassword" type="password" placeholder="Min 6 characters" required />
+
+        <label for="registerConfirm">Confirm Password</label>
+        <input id="registerConfirm" type="password" placeholder="Re-enter password" required />
+
+        <button type="submit">Create Account</button>
+        <p id="registerMessage" class="message"></p>
+      </form>
+
+      <p class="auth-hint">Demo: admin@company.com / admin123</p>
+      <p class="auth-hint">Analyst: analyst@company.com / analyst123</p>
+    </section>
+  </main>
+
+  <script src="js/script.js?v=20260415"></script>
+</body>
+</html>
+

@@ -1,0 +1,6 @@
+{
+  "python.defaultInterpreterPath": "c:/Users/niyaz/OneDrive/Desktop/Financial MIS with Ai Based Fraud Detection & Cyber security alert system/.venv/Scripts/python.exe",
+  "python.analysis.extraPaths": [
+    "./backend"
+  ]
+}
