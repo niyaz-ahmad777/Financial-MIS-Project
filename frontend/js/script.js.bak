@@ -1,0 +1,560 @@
+const apiBase = "http://127.0.0.1:5000/api";
+let authToken = localStorage.getItem("authToken");
+let currentUsername = localStorage.getItem("currentUsername") || "Admin";
+let dashboardChartsInitialized = false;
+
+function authHeaders(extraHeaders = {}) {
+  return authToken
+    ? { ...extraHeaders, Authorization: `Bearer ${authToken}` }
+    : { ...extraHeaders };
+}
+
+async function apiGet(path, options = {}) {
+  const response = await fetch(`${apiBase}${path}`, {
+    ...options,
+    headers: authHeaders(options.headers || {})
+  });
+  if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem("authToken");
+      authToken = null;
+      if (window.location.pathname.includes("dashboard")) {
+        showLoginModal();
+      }
+    }
+    throw new Error(`Request failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+let currentUsername = localStorage.getItem("currentUsername") || "Admin";
+
+const loginForm = document.getElementById("loginForm");
+if (loginForm) {
+  loginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const message = document.getElementById("message");
+
+    const response = await fetch(`${apiBase}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+    if (response.ok && data.success) {
+      authToken = data.token;
+      currentUsername = data.user.username;
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("currentUsername", data.user.username);
+      window.location.href = "dashboard.html";
+    } else {
+      message.textContent = data.message || "Invalid credentials";
+    }
+  });
+}
+
+const loginModal = document.getElementById("loginModal");
+const dashboardLoginForm = document.getElementById("dashboardLoginForm");
+const dashboardRegisterForm = document.getElementById("dashboardRegisterForm");
+const closeLoginModal = document.getElementById("closeLoginModal");
+
+function showLoginModal() {
+  if (loginModal) {
+    loginModal.classList.add("show");
+    loginModal.setAttribute("aria-hidden", "false");
+  }
+}
+
+function hideLoginModal() {
+  if (loginModal) {
+    loginModal.classList.remove("show");
+    loginModal.setAttribute("aria-hidden", "true");
+  }
+}
+
+if (closeLoginModal) {
+  closeLoginModal.addEventListener("click", hideLoginModal);
+}
+
+if (loginModal) {
+  loginModal.addEventListener("click", (event) => {
+    if (event.target === loginModal) {
+      hideLoginModal();
+    }
+  });
+}
+
+if (dashboardLoginForm) {
+  dashboardLoginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const username = document.getElementById("loginUsername").value;
+    const password = document.getElementById("loginPassword").value;
+    const message = document.getElementById("dashboardLoginMessage");
+
+    try {
+      const response = await fetch(`${apiBase}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        authToken = data.token;
+        currentUsername = data.user.username;
+        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("currentUsername", data.user.username);
+        hideLoginModal();
+        location.reload();
+      } else {
+        message.textContent = data.message || "Invalid credentials";
+      }
+    } catch (error) {
+      message.textContent = "Login failed. Please try again.";
+    }
+  });
+}
+
+if (dashboardRegisterForm) {
+  dashboardRegisterForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const username = document.getElementById("registerUsername").value;
+    const password = document.getElementById("registerPassword").value;
+    const confirm_password = document.getElementById("registerConfirm").value;
+    const message = document.getElementById("dashboardRegisterMessage");
+
+    try {
+      const response = await fetch(`${apiBase}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, confirm_password })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        authToken = data.token;
+        currentUsername = data.user.username;
+        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("currentUsername", data.user.username);
+        hideLoginModal();
+        location.reload();
+      } else {
+        message.textContent = data.message || "Registration failed";
+      }
+    } catch (error) {
+      message.textContent = "Registration failed. Please try again.";
+    }
+  });
+}
+
+function getInitials(username) {
+  return username
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .substr(0, 2);
+}
+
+function updateUserProfile() {
+  const sidebarUsername = document.getElementById("sidebarUsername");
+  const avatarInitials = document.getElementById("avatarInitials");
+  const menuUsername = document.getElementById("menuUsername");
+
+  if (sidebarUsername) sidebarUsername.textContent = currentUsername;
+  if (avatarInitials) avatarInitials.textContent = getInitials(currentUsername);
+  if (menuUsername) menuUsername.textContent = currentUsername;
+}
+
+const sidebarUser = document.getElementById("sidebarUser");
+if (sidebarUser) {
+  sidebarUser.addEventListener("click", () => {
+    const menu = document.getElementById("profileMenu");
+    if (menu) {
+      menu.style.display = menu.style.display === "none" ? "block" : "none";
+    }
+  });
+}
+
+const profileLogout = document.getElementById("profileLogout");
+if (profileLogout) {
+  profileLogout.addEventListener("click", () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("currentUsername");
+    authToken = null;
+    window.location.href = "index.html";
+  });
+}
+
+document.addEventListener("click", (e) => {
+  const sidebarUser = document.getElementById("sidebarUser");
+  const profileMenu = document.getElementById("profileMenu");
+  if (profileMenu && sidebarUser && !sidebarUser.contains(e.target) && !profileMenu.contains(e.target)) {
+    profileMenu.style.display = "none";
+  }
+});
+
+updateUserProfile();
+
+function switchAuthTab(tab) {
+  const loginForm = document.getElementById("dashboardLoginForm");
+  const registerForm = document.getElementById("dashboardRegisterForm");
+  const loginTabBtn = document.getElementById("loginTabBtn");
+  const registerTabBtn = document.getElementById("registerTabBtn");
+
+  if (tab === "login") {
+    loginForm.style.display = "block";
+    registerForm.style.display = "none";
+    loginTabBtn.style.borderBottom = "2px solid #0f766e";
+    loginTabBtn.style.color = "#0f766e";
+    registerTabBtn.style.borderBottom = "2px solid #ddd";
+    registerTabBtn.style.color = "#999";
+  } else {
+    loginForm.style.display = "none";
+    registerForm.style.display = "block";
+    registerTabBtn.style.borderBottom = "2px solid #0f766e";
+    registerTabBtn.style.color = "#0f766e";
+    loginTabBtn.style.borderBottom = "2px solid #ddd";
+    loginTabBtn.style.color = "#999";
+  }
+}
+
+const logoutAction = document.getElementById("logoutAction");
+if (logoutAction) {
+  logoutAction.addEventListener("click", () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("currentUsername");
+    authToken = null;
+    currentUsername = "Admin";
+  });
+}
+
+const darkModeEnabled = localStorage.getItem("darkMode") === "true";
+if (darkModeEnabled) {
+  document.body.classList.add("dark");
+}
+
+const darkModeToggle = document.getElementById("darkModeToggle");
+if (darkModeToggle) {
+  darkModeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+    localStorage.setItem("darkMode", String(document.body.classList.contains("dark")));
+  });
+}
+
+const appToast = document.getElementById("appToast");
+function showToast(message) {
+  if (!appToast) {
+    return;
+  }
+  appToast.textContent = message;
+  appToast.classList.add("show");
+  setTimeout(() => {
+    appToast.classList.remove("show");
+  }, 2000);
+}
+
+const notifyBtn = document.getElementById("notifyBtn");
+if (notifyBtn) {
+  notifyBtn.addEventListener("click", () => {
+    showToast("New threat intelligence synced.");
+  });
+}
+
+const fraudModal = document.getElementById("fraudModal");
+const fraudModalText = document.getElementById("fraudModalText");
+const closeFraudModal = document.getElementById("closeFraudModal");
+
+function showFraudModal(message) {
+  if (!fraudModal || !fraudModalText) {
+    return;
+  }
+  fraudModalText.textContent = message;
+  fraudModal.classList.add("show");
+  fraudModal.setAttribute("aria-hidden", "false");
+}
+
+function hideFraudModal() {
+  if (!fraudModal) {
+    return;
+  }
+  fraudModal.classList.remove("show");
+  fraudModal.setAttribute("aria-hidden", "true");
+}
+
+if (closeFraudModal) {
+  closeFraudModal.addEventListener("click", hideFraudModal);
+}
+
+if (fraudModal) {
+  fraudModal.addEventListener("click", (event) => {
+    if (event.target === fraudModal) {
+      hideFraudModal();
+    }
+  });
+}
+
+async function loadDashboard() {
+  const kpiTransactions = document.getElementById("kpiTransactions");
+  if (!kpiTransactions) {
+    return;
+  }
+  const [summary, transactionsPayload, alertsPayload] = await Promise.all([
+    apiGet("/transactions/summary"),
+    apiGet("/transactions"),
+    apiGet("/alerts")
+  ]);
+  const transactions = transactionsPayload.transactions || [];
+  const alerts = alertsPayload.alerts || [];
+  const totalAmount = transactions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+
+  document.getElementById("kpiTransactions").textContent = summary.total_transactions;
+  document.getElementById("kpiAlerts").textContent = summary.total_alerts;
+  document.getElementById("kpiHighRisk").textContent = summary.high_risk;
+  const totalAmountNode = document.getElementById("kpiTotalAmount");
+  if (totalAmountNode) {
+    totalAmountNode.textContent = `INR ${totalAmount.toLocaleString("en-IN")}`;
+  }
+
+  const latestBody = document.getElementById("latestTransactionsBody");
+  if (latestBody) {
+    latestBody.innerHTML = transactions
+      .slice(0, 6)
+      .map((tx) => {
+        const isFraud = tx.risk === "HIGH";
+        return `
+          <tr>
+            <td>${tx.id}</td>
+            <td>${tx.account}</td>
+            <td>${Number(tx.amount || 0).toLocaleString("en-IN")}</td>
+            <td>${tx.type}</td>
+            <td><span class="status-pill ${isFraud ? "fraud" : "normal"}" data-account="${tx.account}" data-amount="${tx.amount}">${isFraud ? "Fraud" : "Normal"}</span></td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    latestBody.querySelectorAll(".status-pill.fraud").forEach((node) => {
+      node.addEventListener("click", () => {
+        showFraudModal(
+          `Transaction flagged: Account ${node.dataset.account}, Amount INR ${Number(node.dataset.amount || 0).toLocaleString("en-IN")}.`
+        );
+      });
+    });
+  }
+
+  const recentAlertsList = document.getElementById("recentAlertsList");
+  if (recentAlertsList) {
+    recentAlertsList.innerHTML = alerts
+      .slice(0, 4)
+      .map((alert) => `
+        <article class="alert-item">
+          <div>
+            <strong>${alert.message}</strong>
+            <p>Alert ID: ${alert.id}</p>
+          </div>
+          <span class="alert-level ${alert.level}">${alert.level}</span>
+        </article>
+      `)
+      .join("");
+  }
+
+  renderDashboardCharts(transactions, summary);
+}
+
+function renderDashboardCharts(transactions, summary) {
+  if (dashboardChartsInitialized) {
+    return;
+  }
+  const barCanvas = document.getElementById("barChart");
+  const pieCanvas = document.getElementById("pieChart");
+  if (!barCanvas || !pieCanvas || typeof Chart === "undefined") {
+    return;
+  }
+
+  const monthlyMap = new Map();
+  transactions.forEach((tx) => {
+    const month = tx.created_at
+      ? new Date(tx.created_at).toLocaleString("en-US", { month: "short" })
+      : "Current";
+    monthlyMap.set(month, (monthlyMap.get(month) || 0) + 1);
+  });
+
+  const barLabels = [...monthlyMap.keys()];
+  const barValues = [...monthlyMap.values()];
+
+  new Chart(barCanvas, {
+    type: "bar",
+    data: {
+      labels: barLabels.length ? barLabels : ["Current"],
+      datasets: [
+        {
+          label: "Transactions",
+          data: barValues.length ? barValues : [0],
+          borderRadius: 8,
+          backgroundColor: ["#4f8fd9", "#3b82f6", "#1d4ed8", "#2563eb"]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 0 },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  const fraudulent = Number(summary.high_risk || 0);
+  const legitimate = Math.max(Number(summary.total_transactions || 0) - fraudulent, 0);
+  new Chart(pieCanvas, {
+    type: "pie",
+    data: {
+      labels: ["Fraudulent", "Legitimate"],
+      datasets: [
+        {
+          data: [fraudulent, legitimate],
+          backgroundColor: ["#ef4444", "#22c55e"]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 0 },
+      plugins: {
+        legend: {
+          position: "right"
+        }
+      }
+    }
+  });
+
+  dashboardChartsInitialized = true;
+}
+
+async function loadTransactions() {
+  const tbody = document.querySelector("#transactionsTable tbody");
+  if (!tbody) {
+    return;
+  }
+  const payload = await apiGet("/transactions");
+  tbody.innerHTML = payload.transactions
+    .map((tx) => {
+      const isFraud = tx.risk === "HIGH";
+      const riskText = isFraud
+        ? `<span class="status-pill fraud" data-account="${tx.account}" data-amount="${tx.amount}">Fraud</span>`
+        : `<span class="status-pill normal">Normal</span>`;
+      return `<tr><td>${tx.id}</td><td>${tx.account}</td><td>${Number(tx.amount || 0).toLocaleString("en-IN")}</td><td>${tx.type}</td><td>${riskText}</td></tr>`;
+    })
+    .join("");
+
+  tbody.querySelectorAll(".status-pill.fraud").forEach((node) => {
+    node.addEventListener("click", () => {
+      showFraudModal(
+        `Transaction flagged: Account ${node.dataset.account}, Amount INR ${Number(node.dataset.amount || 0).toLocaleString("en-IN")}.`
+      );
+    });
+  });
+}
+
+async function loadAlerts() {
+  const list = document.getElementById("alertsList");
+  if (!list) {
+    return;
+  }
+  const payload = await apiGet("/alerts");
+  list.innerHTML = payload.alerts
+    .map((alert) => `<li>${alert.level}: ${alert.message}</li>`)
+    .join("");
+}
+
+const reportButton = document.getElementById("generateReport");
+if (reportButton) {
+  reportButton.addEventListener("click", async () => {
+    const status = document.getElementById("reportStatus");
+    try {
+      const response = await fetch(`${apiBase}/transactions/report`, {
+        headers: authHeaders()
+      });
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "transactions_report.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      status.textContent = "Report downloaded successfully.";
+    } catch (_error) {
+      status.textContent = "Failed to download report.";
+    }
+  });
+}
+
+function getInitials(username) {
+  return username
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .substr(0, 2);
+}
+
+function updateUserProfile() {
+  const sidebarUsername = document.getElementById("sidebarUsername");
+  const avatarInitials = document.getElementById("avatarInitials");
+  const menuUsername = document.getElementById("menuUsername");
+
+  if (sidebarUsername) sidebarUsername.textContent = currentUsername;
+  if (avatarInitials) avatarInitials.textContent = getInitials(currentUsername);
+  if (menuUsername) menuUsername.textContent = currentUsername;
+}
+
+const sidebarUser = document.getElementById("sidebarUser");
+if (sidebarUser) {
+  sidebarUser.addEventListener("click", () => {
+    const menu = document.getElementById("profileMenu");
+    if (menu) {
+      menu.style.display = menu.style.display === "none" ? "block" : "none";
+    }
+  });
+}
+
+const profileLogout = document.getElementById("profileLogout");
+if (profileLogout) {
+  profileLogout.addEventListener("click", () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("currentUsername");
+    authToken = null;
+    window.location.href = "index.html";
+  });
+}
+
+document.addEventListener("click", (e) => {
+  const sidebarUser = document.getElementById("sidebarUser");
+  const profileMenu = document.getElementById("profileMenu");
+  if (profileMenu && sidebarUser && !sidebarUser.contains(e.target) && !profileMenu.contains(e.target)) {
+    profileMenu.style.display = "none";
+  }
+});
+
+updateUserProfile();
+
+loadDashboard().catch(() => {});
+loadTransactions().catch(() => {});
+loadAlerts().catch(() => {});
+
+// Show login modal if not authenticated and on dashboard
+if (window.location.pathname.includes("dashboard") && !authToken) {
+  showLoginModal();
+}
+

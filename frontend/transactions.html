@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial MIS - Transactions</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" type="button" data-back-href="dashboard.html"><i class="bi bi-arrow-left"></i> Back</button>
+      <h1>Transactions</h1>
+    </div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="alerts.html">Alerts</a>
+      <a href="reports.html">Reports</a>
+      <a href="profile.html">Profile</a>
+      <button id="darkModeToggle" type="button" class="icon-btn" title="Toggle dark mode">D</button>
+      <button id="notifyBtn" type="button" class="icon-btn" title="Show notification">N</button>
+    </nav>
+  </header>
+  <main class="page">
+    <section class="card">
+      <div class="section-header">
+        <h2>Recent Transactions</h2>
+        <button id="addTxBtn" type="button">Add Transaction</button>
+      </div>
+
+      <div class="filters-row">
+        <input id="txSearch" type="text" placeholder="Search by ID, account, type" />
+        <select id="txFilterStatus">
+          <option value="all">All</option>
+          <option value="fraud">Fraud</option>
+          <option value="normal">Normal</option>
+        </select>
+      </div>
+
+      <div class="filters-row filters-row-3">
+        <select id="txSortBy">
+          <option value="id_desc">Newest First</option>
+          <option value="id_asc">Oldest First</option>
+          <option value="amount_desc">Amount High to Low</option>
+          <option value="amount_asc">Amount Low to High</option>
+          <option value="account_asc">Account A-Z</option>
+          <option value="account_desc">Account Z-A</option>
+        </select>
+        <select id="txPageSize">
+          <option value="5">5 per page</option>
+          <option value="10" selected>10 per page</option>
+          <option value="20">20 per page</option>
+        </select>
+        <p id="txCountInfo" class="meta-inline">0 records</p>
+      </div>
+
+      <div class="table-wrap">
+        <table id="transactionsTable">
+          <thead><tr><th>ID</th><th>Account</th><th>Amount</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="pagination-row">
+        <button id="txPrevPage" type="button" class="action-btn edit">Prev</button>
+        <span id="txPageInfo" class="meta-inline">Page 1 of 1</span>
+        <button id="txNextPage" type="button" class="action-btn edit">Next</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="appToast" class="app-toast" role="status" aria-live="polite">Security alert feed refreshed.</div>
+
+  <div id="fraudModal" class="app-modal" aria-hidden="true">
+    <div class="app-modal-content">
+      <div class="app-modal-header">
+        <h3>Fraud Alert</h3>
+        <button id="closeFraudModal" type="button" class="modal-close" aria-label="Close">x</button>
+      </div>
+      <p id="fraudModalText">This transaction is marked as fraud.</p>
+    </div>
+  </div>
+
+  <div id="txModal" class="app-modal" aria-hidden="true">
+    <div class="app-modal-content">
+      <div class="app-modal-header">
+        <h3 id="txModalTitle">Add Transaction</h3>
+        <button id="closeTxModal" type="button" class="modal-close" aria-label="Close">x</button>
+      </div>
+
+      <form id="txForm">
+        <input id="txId" type="hidden" />
+        <label for="txAccount">Account</label>
+        <input id="txAccount" type="text" placeholder="AC123" required />
+
+        <label for="txAmount">Amount</label>
+        <input id="txAmount" type="number" min="1" step="0.01" placeholder="1000" required />
+
+        <label for="txType">Type</label>
+        <select id="txType" required>
+          <option value="transfer">transfer</option>
+          <option value="withdrawal">withdrawal</option>
+          <option value="payment">payment</option>
+        </select>
+
+        <button id="saveTxBtn" type="submit">Save</button>
+        <p id="txFormMessage" class="message"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
